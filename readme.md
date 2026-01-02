@@ -1,105 +1,115 @@
-# Snappos API
+# Snappos - Modern Point of Sale System
 
-**Deskripsi:**
-- Snappos API adalah RESTful API sederhana untuk manajemen produk dan transaksi (checkout), dilengkapi fitur autentikasi token. Proyek ditulis sebagai PHP micro-API tanpa framework besar, cocok untuk penggunaan ringan atau pembelajaran.
+![Snappos Banner](https://via.placeholder.com/1200x400/673AB7/ffffff?text=Snappos+POS)
 
-**Bahasa & Persyaratan:**
-- **Bahasa pemrograman:** PHP (disarankan PHP 8.0+ karena penggunaan `str_starts_with` dan fitur modern lainnya)
-- **Database:** MySQL / MariaDB (terhubung lewat PDO)
-- **Server web:** Apache (biasanya dijalankan lewat XAMPP/LAMPP di lingkungan pengembangan)
-- **File token:** penyimpanan token sederhana menggunakan `storage_tokens.json`
+**Snappos** adalah aplikasi Point of Sale (Kasir) modern yang dirancang untuk efisiensi bisnis ritel kecil hingga menengah. Aplikasi ini terdiri dari *Backend* berbasis PHP Native yang ringan dan *Frontend* mobile/web berbasis Flutter dengan desain Material 3 yang elegan.
 
-**Fitur utama:**
-- Register / Login / Me (autentikasi berbasis token)
-- CRUD Produk (list, simpan, update, hapus)
-- Transaksi (checkout, riwayat, detail transaksi)
-- Endpoint health untuk pengecekan layanan
+---
 
-**Struktur proyek (singkat):**
-- `public/` : entrypoint `index.php` dan routing sederhana
-- `modules/` : handler endpoint (auth, products, transactions)
-- `config/` : konfigurasi (CORS, DB)
-- `core/` : utilitas bersama (auth, response, utils)
-- `storage_tokens.json` : penyimpanan token sederhana
+## 🛠️ Tech Stack
 
-**Struktur proyek (lengkap):**
+### Frontend (Mobile/Web App)
+Built with **Flutter** for a beautiful, natively compiled application.
+- ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white) **Flutter SDK**: UI Toolkit utama.
+- ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white) **Dart Language**: Bahasa pemrograman untuk Flutter.
+- **Material 3**: Design system terbaru dari Google.
+- **Provider / State Management**: Manajemen state aplikasi.
+
+### Backend (API)
+Built with **PHP Native** for speed and simplicity.
+- ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white) **PHP 8.0+**: Bahasa server-side.
+- ![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white) **MySQL / MariaDB**: Database relasional.
+- ![Apache](https://img.shields.io/badge/Apache-D22128?style=for-the-badge&logo=apache&logoColor=white) **Apache Server**: Web server (via XAMPP/LAMPP).
+- **RESTful API**: Arsitektur komunikasi data JSON.
+
+---
+
+## ✨ Fitur Utama
+
+### 🔐 Autentikasi & Keamanan
+- **Login & Register**: Sistem akun untuk Admin dan Kasir.
+- **Token Based Auth**: Autentikasi aman menggunakan Bearer Token.
+- **Auto Logout**: Keamanan sesi otomatis jika token kadaluarsa.
+
+### 📦 Manajemen Produk
+- **Katalog Produk**: Tampilan grid modern dengan informasi stok dan harga.
+- **Stok Real-time**: Indikator stok dan pencegahan penjualan jika stok habis.
+- **Pencarian & Filter**: (Coming soon) Memudahkan pencarian barang.
+
+### 🛒 Transaksi & Kasir
+- **Keranjang Belanja**: Tambah/Kurang item dengan mudah.
+- **Kalkulasi Otomatis**: Menghitung total dan kembalian secara instan.
+- **Checkout Cepat**: Proses pembayaran yang ringkas dan intuitif.
+- **Dialog Sukses**: Konfirmasi visual saat transaksi berhasil.
+
+### 📜 Riwayat & Laporan
+- **Riwayat Transaksi**: Daftar transaksi lengkap dengan detail waktu dan kasir.
+- **Detail Struk**: Tampilan detail transaksi mirip struk belanja digital.
+
+---
+
+## 🚀 Cara Install & Menjalankan
+
+### Persiapan (Prerequisites)
+1.  **XAMPP** (atau web server lain dengan PHP & MySQL).
+2.  **Flutter SDK** (sudah terinstall dan dikonfigurasi).
+3.  **Git** (untuk clone proyek).
+
+### 1️⃣ Setup Backend & Database
+1.  Clone repository ini ke dalam folder `htdocs` XAMPP Anda.
+    ```bash
+    cd /opt/lampp/htdocs
+    git clone https://github.com/rizkipr05/Snappos-app.git snappos_api
+    ```
+2.  Nyalakan **Apache** dan **MySQL** di XAMPP.
+3.  Buka **phpMyAdmin** (`http://localhost/phpmyadmin`).
+4.  Buat database baru dengan nama **`snappos_db`**.
+5.  Import file **`database.sql`** yang ada di root folder proyek ini ke dalam database tersebut.
+    - *File ini sudah berisi tabel `users`, `products`, `transactions`, dll serta user admin default.*
+6.  (Opsional) Cek konfigurasi database di `config/db.php` jika Anda menggunakan password root yang berbeda.
+
+### 2️⃣ Konfigurasi Frontend
+1.  Masuk ke folder Flutter:
+    ```bash
+    cd snappos_flutter
+    ```
+2.  Install dependencies:
+    ```bash
+    flutter pub get
+    ```
+3.  **Penting**: Buka file `lib/core/api.dart` dan sesuaikan `baseUrl` dengan IP Address komputer Anda (jangan gunakan `localhost` jika menjalankan di emulator HP, gunakan IP LAN seperti `192.168.x.x`).
+    ```dart
+    static const String baseUrl = "http://192.168.1.5/snappos_api/public/index.php";
+    ```
+    *Jika menjalankan di Chrome/Web, `localhost` mungkin bisa digunakan tergantung konfigurasi CORS.*
+
+### 3️⃣ Jalankan Aplikasi
+Jalankan perintah berikut untuk membuka aplikasi di Google Chrome (Web) atau Emulator:
+
+```bash
+flutter run -d chrome
 ```
-/ (root)
-├─ readme.md
-├─ storage_tokens.json
-├─ .htaccess
-├─ config/
-│  ├─ auth.php        # konfigurasi/utility terkait header auth (CORS atau middleware sederhana)
-│  ├─ cors.php        # aturan CORS
-│  └─ db.php          # koneksi PDO ke MySQL
-├─ core/
-│  ├─ auth.php        # helper auth: make_token, save_token, require_auth, require_role
-│  ├─ response.php    # helper respons JSON (fungsi json())
-│  └─ utils.php       # utilitas tambahan (jika ada)
-├─ modules/
-│  ├─ auth/
-│  │  ├─ register.php # endpoint registrasi
-│  │  ├─ login.php    # endpoint login (menghasilkan token)
-│  │  └─ me.php       # endpoint untuk info user (requires token)
-│  ├─ products/
-│  │  ├─ index.php    # GET /api/products — list produk
-│  │  ├─ store.php    # POST /api/products — buat produk
-│  │  ├─ update.php   # PUT /api/products/:id — update
-│  │  └─ delete.php   # DELETE /api/products/:id — hapus
-│  └─ transactions/
-│     ├─ checkout.php # POST /api/checkout — proses pembayaran/checkout
-│     ├─ history.php  # GET /api/transactions — riwayat transaksi
-│     └─ detail.php   # GET /api/transactions/:id — detail transaksi
-└─ public/
-  └─ index.php       # entrypoint + router sederhana (menentukan route dan require file modul)
+
+---
+
+## 👤 Akun Default
+Setelah import database, Anda bisa login dengan akun admin berikut:
+- **Email**: `admin@snappos.com`
+- **Password**: `password123`
+
+---
+
+## 📂 Struktur Folder
 ```
-
-Tambahkan catatan per-file di atas sesuai kebutuhan; ini mencerminkan layout aktual proyek saat ini.
-
-**Autentikasi:**
-- Menggunakan token (Bearer) yang di-generate oleh fungsi `make_token()` dan disimpan di `storage_tokens.json`.
-- Middleware ringan `require_auth()` dan `require_role()` di `core/auth.php`.
-
-**Database:**
-- Koneksi dibuat dengan PDO di `config/db.php`.
-- Sesuaikan kredensial DB pada `config/db.php` (host, user, pass, dbname).
-
-**Icon / Tech Stack (ikon):**
-
-Berikut daftar teknologi yang digunakan dan contoh ikon/badge yang bisa dipakai pada README atau dokumentasi:
-
-- PHP 8+:  
-  ![PHP](https://img.shields.io/badge/PHP-8.0-blue?logo=php&logoColor=white)
-- MySQL:  
-  ![MySQL](https://img.shields.io/badge/MySQL-5.7-brightgreen?logo=mysql&logoColor=white)
-- Apache / XAMPP:  
-  ![Apache](https://img.shields.io/badge/Apache-server-orange?logo=apache&logoColor=white)
-- PDO (PHP Data Objects):  
-  ![PDO](https://img.shields.io/badge/PDO-PHP-yellow)
-- JSON (payloads & penyimpanan token):  
-  ![JSON](https://img.shields.io/badge/JSON-data-lightgrey)
-- REST API (HTTP endpoints):  
-  ![REST](https://img.shields.io/badge/REST-API-blueviolet)
-
-Catatan: ikon di atas menggunakan layanan Shields.io dan parameter `logo` dari Simple Icons. Ganti versi/warna sesuai preferensi.
-
-**Cara jalankan (dev, contoh):**
-1. Letakkan folder proyek di `htdocs` (XAMPP/LAMP) atau set virtual host ke folder root proyek.
-2. Pastikan MySQL berjalan dan buat database `snappos_db` (atau ubah nama DB di `config/db.php`).
-3. Akses endpoint melalui browser atau API client (contoh): `http://localhost/snappos_api/public/index.php/api/health` atau `http://localhost/snappos_api/api/health`.
-
-**Endpoint singkat:**
-- `POST /api/auth/register` — registrasi pengguna
-- `POST /api/auth/login` — login dan terima token
-- `GET /api/auth/me` — info user (butuh Authorization: Bearer <token>)
-- `GET /api/products` — list produk
-- `POST /api/products` — simpan produk (butuh auth jika dikonfigurasi)
-- `PUT /api/products/:id` — update produk
-- `DELETE /api/products/:id` — hapus produk
-- `POST /api/checkout` — proses checkout
-- `GET /api/transactions` — riwayat transaksi
-- `GET /api/transactions/:id` — detail transaksi
-
-**Catatan pengembangan / keamanan:**
-- Penyimpanan token saat ini menggunakan file JSON — untuk produksi, gunakan penyimpanan yang lebih aman (database atau cache terproteksi).
-- Sanitasi masukan dan validasi lebih ketat direkomendasikan untuk endpoint yang menerima input user.
+snappos_api/
+├── config/              # Konfigurasi Database & CORS
+├── core/                # Helper function (Auth, Response)
+├── modules/             # Logika API (Login, Product, Transaction)
+├── public/              # Entry point (index.php)
+├── snappos_flutter/     # Source Code Frontend Flutter
+│   ├── lib/
+│   │   ├── core/        # API Client & Storage SharedPrefs
+│   │   ├── features/    # Halaman (Auth, Product, Cart, History)
+│   │   └── main.dart    # Entry point & Tema Aplikasi
+└── database.sql         # File Schema Database
+```
