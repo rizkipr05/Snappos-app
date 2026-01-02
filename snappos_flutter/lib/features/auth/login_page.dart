@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/api.dart';
-import '../../core/storage.dart';
+import 'package:snappos_flutter/core/api.dart';
+import 'package:snappos_flutter/core/storage.dart';
 import '../products/product_list_page.dart';
 import 'register_page.dart';
 

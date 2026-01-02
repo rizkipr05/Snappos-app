@@ -22,6 +22,40 @@
 - `core/` : utilitas bersama (auth, response, utils)
 - `storage_tokens.json` : penyimpanan token sederhana
 
+**Struktur proyek (lengkap):**
+```
+/ (root)
+├─ readme.md
+├─ storage_tokens.json
+├─ .htaccess
+├─ config/
+│  ├─ auth.php        # konfigurasi/utility terkait header auth (CORS atau middleware sederhana)
+│  ├─ cors.php        # aturan CORS
+│  └─ db.php          # koneksi PDO ke MySQL
+├─ core/
+│  ├─ auth.php        # helper auth: make_token, save_token, require_auth, require_role
+│  ├─ response.php    # helper respons JSON (fungsi json())
+│  └─ utils.php       # utilitas tambahan (jika ada)
+├─ modules/
+│  ├─ auth/
+│  │  ├─ register.php # endpoint registrasi
+│  │  ├─ login.php    # endpoint login (menghasilkan token)
+│  │  └─ me.php       # endpoint untuk info user (requires token)
+│  ├─ products/
+│  │  ├─ index.php    # GET /api/products — list produk
+│  │  ├─ store.php    # POST /api/products — buat produk
+│  │  ├─ update.php   # PUT /api/products/:id — update
+│  │  └─ delete.php   # DELETE /api/products/:id — hapus
+│  └─ transactions/
+│     ├─ checkout.php # POST /api/checkout — proses pembayaran/checkout
+│     ├─ history.php  # GET /api/transactions — riwayat transaksi
+│     └─ detail.php   # GET /api/transactions/:id — detail transaksi
+└─ public/
+  └─ index.php       # entrypoint + router sederhana (menentukan route dan require file modul)
+```
+
+Tambahkan catatan per-file di atas sesuai kebutuhan; ini mencerminkan layout aktual proyek saat ini.
+
 **Autentikasi:**
 - Menggunakan token (Bearer) yang di-generate oleh fungsi `make_token()` dan disimpan di `storage_tokens.json`.
 - Middleware ringan `require_auth()` dan `require_role()` di `core/auth.php`.

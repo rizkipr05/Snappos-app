@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/api.dart';
+import 'package:snappos_flutter/core/api.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
