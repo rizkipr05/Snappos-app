@@ -69,9 +69,3 @@ Catatan: ikon di atas menggunakan layanan Shields.io dan parameter `logo` dari S
 **Catatan pengembangan / keamanan:**
 - Penyimpanan token saat ini menggunakan file JSON — untuk produksi, gunakan penyimpanan yang lebih aman (database atau cache terproteksi).
 - Sanitasi masukan dan validasi lebih ketat direkomendasikan untuk endpoint yang menerima input user.
-
----
-
-Jika mau, saya bisa:
-- menambahkan badge/ikon yang berbeda, atau
-- menyiapkan contoh `curl`/Postman collection untuk semua endpoint.
