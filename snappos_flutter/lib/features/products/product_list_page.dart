@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:snappos_flutter/core/api.dart';
-import 'package:snappos_flutter/core/storage.dart';
+import '../../core/api.dart';
+import '../../core/storage.dart';
 import '../auth/login_page.dart';
 import '../cart/cart_controller.dart';
 import '../cart/cart_page.dart';
 import '../transactions/history_page.dart';
+import '../users/user_list_page.dart';
+import 'product_form_page.dart';
 
 class ProductListPage extends StatefulWidget {
   const ProductListPage({super.key});
@@ -14,57 +16,92 @@ class ProductListPage extends StatefulWidget {
 }
 
 class _ProductListPageState extends State<ProductListPage> {
-  final cart = CartController();
-  bool loading = true;
+  List<dynamic> products = [];
+  bool loading = false;
   String? err;
-  List<Map<String, dynamic>> products = [];
+  String? role;
+  
+  // Cart
+  final CartController cart = CartController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkRole();
+    load();
+  }
+  
+  Future<void> _checkRole() async {
+    final r = await Storage.getRole();
+    setState(() => role = r);
+  }
 
   Future<void> load() async {
     setState(() {
       loading = true;
       err = null;
     });
+
     try {
       final token = await Storage.getToken();
       final res = await Api.get("/api/products", token: token);
       final data = (res["data"] as List).cast<Map<String, dynamic>>();
       setState(() => products = data);
     } catch (e) {
+      if (e.toString().contains("401")) { 
+        // handle token expired in UI
+      }
       setState(() => err = e.toString().replaceAll("Exception:", "").trim());
     } finally {
-      setState(() => loading = false);
+      if (mounted) setState(() => loading = false);
     }
   }
 
   Future<void> logout() async {
     await Storage.clear();
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginPage()),
-      (_) => false,
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    load();
+  Future<void> deleteProduct(int id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Hapus Produk?"),
+        content: const Text("Produk akan dihapus permanen."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Hapus", style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => loading = true);
+    try {
+      final token = await Storage.getToken();
+      await Api.delete("/api/products/$id", token: token);
+      await load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Produk berhasil dihapus")));
+    } catch (e) {
+      setState(() => err = e.toString().replaceAll("Exception:", "").trim());
+      setState(() => loading = false);
+    } 
   }
 
   @override
   Widget build(BuildContext context) {
+    final isAdmin = role == "admin";
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Katalog Produk"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.deepPurple),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const HistoryPage()),
-            ),
-          ),
           Stack(
             children: [
               IconButton(
@@ -100,11 +137,62 @@ class _ProductListPageState extends State<ProductListPage> {
                 ),
             ],
           ),
-          IconButton(
-            icon: const Icon(Icons.logout_outlined, color: Colors.grey),
-            onPressed: logout,
-          ),
+          const SizedBox(width: 8),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(color: Colors.deepPurple),
+              accountName: Text(isAdmin ? "Administrator" : "Kasir"),
+              accountEmail: const Text("Snappos System"),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(
+                  isAdmin ? Icons.admin_panel_settings : Icons.person,
+                  size: 32,
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.store),
+              title: const Text('Katalog Produk'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Riwayat Transaksi'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HistoryPage()),
+                );
+              },
+            ),
+            if (isAdmin)
+              ListTile(
+                leading: const Icon(Icons.people),
+                title: const Text('Kelola Kasir'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const UserListPage()),
+                  );
+                },
+              ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Keluar', style: TextStyle(color: Colors.red)),
+              onTap: logout,
+            ),
+          ],
+        ),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
@@ -137,7 +225,7 @@ class _ProductListPageState extends State<ProductListPage> {
                 padding: const EdgeInsets.all(16),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.8,
+                  childAspectRatio: 0.75, // Slightly taller for admin controls
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),
@@ -157,14 +245,61 @@ class _ProductListPageState extends State<ProductListPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Container(
-                            color: Colors.grey.shade100,
-                            width: double.infinity,
-                            child: Icon(
-                              Icons.inventory_2_outlined,
-                              size: 48,
-                              color: Colors.deepPurple.shade100,
-                            ),
+                          child: Stack(
+                            children: [
+                              Container(
+                                color: Colors.grey.shade100,
+                                width: double.infinity,
+                                child: Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 48,
+                                  color: Colors.deepPurple.shade100,
+                                ),
+                              ),
+                              if (isAdmin)
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.8),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: IconButton(
+                                          icon: const Icon(Icons.edit, size: 18, color: Colors.blue),
+                                          onPressed: () async {
+                                            final refresh = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => ProductFormPage(product: p),
+                                              ),
+                                            );
+                                            if (refresh == true) load();
+                                          },
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.8),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: IconButton(
+                                          icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                                          onPressed: () => deleteProduct(id),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         Padding(
@@ -231,6 +366,19 @@ class _ProductListPageState extends State<ProductListPage> {
                 },
               ),
             ),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
+              onPressed: () async {
+                final refresh = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProductFormPage()),
+                );
+                if (refresh == true) load();
+              },
+              backgroundColor: Colors.deepPurple,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
       bottomNavigationBar: cart.items.isEmpty
           ? null
           : Container(

@@ -24,13 +24,18 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final res = await Api.post(
-        "/api/auth/login",
-        {"email": emailC.text.trim(), "password": passC.text},
-      );
+      final res = await Api.post("/api/auth/login", {
+        "email": emailC.text,
+        "password": passC.text,
+      });
 
       final token = res["token"];
+      final user = res["user"];
+      
       await Storage.setToken(token);
+      if (user != null && user["role"] != null) {
+        await Storage.setRole(user["role"].toString());
+      }
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -40,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       setState(() => err = e.toString().replaceAll("Exception:", "").trim());
     } finally {
-      setState(() => loading = false);
+      if (mounted) setState(() => loading = false);
     }
   }
 
