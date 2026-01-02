@@ -56,27 +56,54 @@ class _ProductListPageState extends State<ProductListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Produk"),
+        title: const Text("Katalog Produk"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history),
+            icon: const Icon(Icons.history, color: Colors.deepPurple),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const HistoryPage()),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => CartPage(cart: cart)),
-              );
-              await load(); // refresh stok setelah checkout
-              setState(() {});
-            },
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_outlined, color: Colors.deepPurple),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => CartPage(cart: cart)),
+                  );
+                  await load();
+                  setState(() {});
+                },
+              ),
+              if (cart.items.isNotEmpty)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      "${cart.items.length}",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-          IconButton(icon: const Icon(Icons.logout), onPressed: logout),
+          IconButton(
+            icon: const Icon(Icons.logout_outlined, color: Colors.grey),
+            onPressed: logout,
+          ),
         ],
       ),
       body: loading
@@ -87,13 +114,18 @@ class _ProductListPageState extends State<ProductListPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.lock, size: 48, color: Colors.orange),
+                      const Icon(Icons.lock_clock_outlined, size: 64, color: Colors.orange),
                       const SizedBox(height: 16),
-                      const Text("Sesi Habis (Unauthorized)"),
-                      const SizedBox(height: 12),
+                      Text("Sesi Habis", style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: 8),
+                      const Text("Silakan login kembali untuk melanjutkan"),
+                      const SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: logout,
-                        child: const Text("Login Ulang"),
+                        style: ElevatedButton.styleFrom(
+                          maximumSize: const Size(200, 50),
+                        ),
+                        child: const Text("LOGIN ULANG"),
                       ),
                     ],
                   ),
@@ -101,7 +133,14 @@ class _ProductListPageState extends State<ProductListPage> {
               : Center(child: Text(err!))
           : RefreshIndicator(
               onRefresh: load,
-              child: ListView.builder(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.8,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
                 itemCount: products.length,
                 itemBuilder: (c, i) {
                   final p = products[i];
@@ -109,48 +148,144 @@ class _ProductListPageState extends State<ProductListPage> {
                   final name = p["name"].toString();
                   final price = int.parse(p["price"].toString());
                   final stock = int.parse(p["stock"].toString());
+                  final isOos = stock <= 0;
 
-                  return ListTile(
-                    title: Text(name),
-                    subtitle: Text("Rp $price • Stok: $stock"),
-                    trailing: ElevatedButton(
-                      onPressed: stock <= 0
-                          ? null
-                          : () {
-                              cart.add(id, name, price);
-                              setState(() {});
-                            },
-                      child: const Text("Tambah"),
+                  return Card(
+                    elevation: 2,
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            color: Colors.grey.shade100,
+                            width: double.infinity,
+                            child: Icon(
+                              Icons.inventory_2_outlined,
+                              size: 48,
+                              color: Colors.deepPurple.shade100,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Rp $price",
+                                style: TextStyle(
+                                  color: Colors.deepPurple.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                isOos ? "Stok Habis" : "Stok: $stock",
+                                style: TextStyle(
+                                  color: isOos ? Colors.red : Colors.grey.shade600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  onPressed: isOos
+                                      ? null
+                                      : () {
+                                          cart.add(id, name, price);
+                                          setState(() {});
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('$name masuk keranjang'),
+                                              duration: const Duration(milliseconds: 500),
+                                              behavior: SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        },
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text("TAMBAH"),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },
               ),
             ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                "Item: ${cart.items.length} • Total: Rp ${cart.total}",
+      bottomNavigationBar: cart.items.isEmpty
+          ? null
+          : Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, -4),
+                    blurRadius: 16,
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${cart.items.length} Barang",
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        Text(
+                          "Total: Rp ${cart.total}",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => CartPage(cart: cart)),
+                        );
+                        await load();
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.shopping_cart_checkout),
+                      label: const Text("Checkout"),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(140, 48),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            ElevatedButton(
-              onPressed: cart.items.isEmpty
-                  ? null
-                  : () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => CartPage(cart: cart)),
-                      );
-                      await load();
-                      setState(() {});
-                    },
-              child: const Text("Checkout"),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -43,40 +43,107 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Detail #${widget.id}")),
+      appBar: AppBar(title: const Text("Detail Transaksi")),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : err != null
           ? Center(child: Text(err!))
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Kasir: ${trx?["cashier_name"]}"),
-                  Text("Total: Rp ${trx?["total"]}"),
-                  Text("Bayar: Rp ${trx?["paid"]}"),
-                  Text("Kembali: Rp ${trx?["change_money"]}"),
-                  const Divider(),
-                  const Text(
-                    "Items:",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (c, i) {
-                        final it = items[i];
-                        return ListTile(
-                          title: Text(it["name"].toString()),
-                          subtitle: Text(
-                            "Rp ${it["price"]} x ${it["qty"]} = Rp ${it["subtotal"]}",
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Rp ${trx?["total"]}",
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      Text(
+                        "Transaksi #${widget.id}",
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 32),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      ...items.map((it) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              Text(
+                                "${it["qty"]}x",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(it["name"].toString()),
+                              ),
+                              Text(
+                                "Rp ${it["subtotal"]}",
+                                style: const TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                            ],
                           ),
                         );
-                      },
-                    ),
+                      }),
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Total", style: TextStyle(color: Colors.grey[600])),
+                          Text(
+                            "Rp ${trx?["total"]}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Tunai", style: TextStyle(color: Colors.grey[600])),
+                          Text(
+                            "Rp ${trx?["paid"]}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Kembali", style: TextStyle(color: Colors.grey[600])),
+                          Text(
+                            "Rp ${trx?["change_money"]}",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Text(
+                        "Terima kasih telah berbelanja",
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      ),
+                      Text(
+                        "${trx?["created_at"]} • ${trx?["cashier_name"]}",
+                        style: TextStyle(color: Colors.grey[400], fontSize: 10),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
     );

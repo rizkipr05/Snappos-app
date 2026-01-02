@@ -61,30 +61,85 @@ class _HistoryPageState extends State<HistoryPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.lock, size: 48, color: Colors.orange),
+                      const Icon(Icons.lock_clock_outlined, size: 64, color: Colors.orange),
                       const SizedBox(height: 16),
-                      const Text("Sesi Habis (Unauthorized)"),
-                      const SizedBox(height: 12),
+                      Text("Sesi Habis", style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: logout,
-                        child: const Text("Login Ulang"),
+                         style: ElevatedButton.styleFrom(
+                          maximumSize: const Size(200, 50),
+                        ),
+                        child: const Text("LOGIN ULANG"),
                       ),
                     ],
                   ),
                 )
               : Center(child: Text(err!))
           : ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: rows.length,
               itemBuilder: (c, i) {
                 final t = rows[i];
                 final id = int.parse(t["id"].toString());
-                return ListTile(
-                  title: Text("Transaksi #$id • Rp ${t["total"]}"),
-                  subtitle: Text("${t["cashier_name"]} • ${t["created_at"]}"),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TransactionDetailPage(id: id),
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TransactionDetailPage(id: id),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurple.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.receipt_long, color: Colors.deepPurple),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Transaksi #$id",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${t["created_at"]}",
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Kasir: ${t["cashier_name"]}",
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            "Rp ${t["total"]}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right, color: Colors.grey),
+                        ],
+                      ),
                     ),
                   ),
                 );

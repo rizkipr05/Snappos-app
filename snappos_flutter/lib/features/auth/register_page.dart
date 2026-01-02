@@ -46,53 +46,103 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Register")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            if (err != null)
-              Text(err!, style: const TextStyle(color: Colors.red)),
-            if (ok != null)
-              Text(ok!, style: const TextStyle(color: Colors.green)),
-            TextField(
-              controller: nameC,
-              decoration: const InputDecoration(labelText: "Nama"),
-            ),
-            TextField(
-              controller: emailC,
-              decoration: const InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: passC,
-              decoration: const InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const Text("Role: "),
-                DropdownButton<String>(
-                  value: role,
-                  items: const [
-                    DropdownMenuItem(value: "cashier", child: Text("cashier")),
-                    DropdownMenuItem(value: "admin", child: Text("admin")),
-                  ],
-                  onChanged: (v) => setState(() => role = v ?? "cashier"),
+      appBar: AppBar(title: const Text("Buat Akun Baru")),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      if (err != null) ...[
+                        Text(
+                          err!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      if (ok != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            ok!,
+                            style: const TextStyle(color: Colors.green),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      TextField(
+                        controller: nameC,
+                        decoration: const InputDecoration(
+                          labelText: "Nama Lengkap",
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: emailC,
+                        decoration: const InputDecoration(
+                          labelText: "Email",
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: passC,
+                        decoration: const InputDecoration(
+                          labelText: "Password",
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: role,
+                        decoration: const InputDecoration(
+                          labelText: "Role",
+                          prefixIcon: Icon(Icons.badge_outlined),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: "cashier",
+                            child: Text("Kasir"),
+                          ),
+                          DropdownMenuItem(
+                            value: "admin",
+                            child: Text("Admin"),
+                          ),
+                        ],
+                        onChanged: (v) => setState(() => role = v ?? "cashier"),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: loading ? null : register,
+                        child: loading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text("DAFTAR"),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: loading ? null : register,
-                child: loading
-                    ? const CircularProgressIndicator()
-                    : const Text("Daftar"),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
