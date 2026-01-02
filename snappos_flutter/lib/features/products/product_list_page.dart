@@ -102,41 +102,42 @@ class _ProductListPageState extends State<ProductListPage> {
       appBar: AppBar(
         title: const Text("Katalog Produk"),
         actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart_outlined, color: Colors.deepPurple),
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => CartPage(cart: cart)),
-                  );
-                  await load();
-                  setState(() {});
-                },
-              ),
-              if (cart.items.isNotEmpty)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      "${cart.items.length}",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+          if (!isAdmin)
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart_outlined, color: Colors.deepPurple),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CartPage(cart: cart)),
+                    );
+                    await load();
+                    setState(() {});
+                  },
+                ),
+                if (cart.items.isNotEmpty)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        "${cart.items.length}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
           const SizedBox(width: 8),
         ],
       ),
@@ -173,18 +174,6 @@ class _ProductListPageState extends State<ProductListPage> {
                 );
               },
             ),
-            if (isAdmin)
-              ListTile(
-                leading: const Icon(Icons.people),
-                title: const Text('Kelola Kasir'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const UserListPage()),
-                  );
-                },
-              ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
@@ -379,7 +368,7 @@ class _ProductListPageState extends State<ProductListPage> {
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
-      bottomNavigationBar: cart.items.isEmpty
+      bottomNavigationBar: (isAdmin || cart.items.isEmpty)
           ? null
           : Container(
               padding: const EdgeInsets.all(16),

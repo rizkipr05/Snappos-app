@@ -30,7 +30,10 @@ class _UserListPageState extends State<UserListPage> {
     try {
       final token = await Storage.getToken();
       final res = await Api.get("/api/users", token: token);
-      setState(() => users = res["data"]);
+      final data = res["data"];
+      setState(() {
+        users = (data is List) ? data : [];
+      });
     } catch (e) {
       setState(() => err = e.toString().replaceAll("Exception:", "").trim());
     } finally {
