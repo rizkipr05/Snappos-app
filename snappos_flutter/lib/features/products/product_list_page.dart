@@ -82,7 +82,23 @@ class _ProductListPageState extends State<ProductListPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : err != null
-          ? Center(child: Text(err!))
+          ? err!.toLowerCase().contains("unauthorized") || err!.toLowerCase().contains("unauthenticated")
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.lock, size: 48, color: Colors.orange),
+                      const SizedBox(height: 16),
+                      const Text("Sesi Habis (Unauthorized)"),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: logout,
+                        child: const Text("Login Ulang"),
+                      ),
+                    ],
+                  ),
+                )
+              : Center(child: Text(err!))
           : RefreshIndicator(
               onRefresh: load,
               child: ListView.builder(

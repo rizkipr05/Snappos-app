@@ -30,11 +30,11 @@ class _CartPageState extends State<CartPage> {
 
       final res = await Api.post(
         "/api/checkout",
-        token: token,
-        body: {
+        {
           "paid": paid,
           "items": widget.cart.items.map((e) => e.toApi()).toList(),
         },
+        token: token,
       );
 
       final total = res["total"];

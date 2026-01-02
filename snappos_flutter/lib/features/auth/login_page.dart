@@ -26,11 +26,11 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final res = await Api.post(
         "/api/auth/login",
-        body: {"email": emailC.text.trim(), "password": passC.text},
+        {"email": emailC.text.trim(), "password": passC.text},
       );
 
-      final token = res["token"] as String;
-      await Storage.saveToken(token);
+      final token = res["token"];
+      await Storage.setToken(token);
 
       if (!mounted) return;
       Navigator.pushReplacement(

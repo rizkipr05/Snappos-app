@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:snappos_flutter/core/api.dart';
 import 'package:snappos_flutter/core/storage.dart';
 import 'transaction_detail_page.dart';
+import '../auth/login_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -32,6 +33,16 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
+  Future<void> logout() async {
+    await Storage.clear();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (_) => false,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +56,23 @@ class _HistoryPageState extends State<HistoryPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : err != null
-          ? Center(child: Text(err!))
+          ? (err!.toLowerCase().contains("unauthorized") || err!.toLowerCase().contains("unauthenticated"))
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.lock, size: 48, color: Colors.orange),
+                      const SizedBox(height: 16),
+                      const Text("Sesi Habis (Unauthorized)"),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: logout,
+                        child: const Text("Login Ulang"),
+                      ),
+                    ],
+                  ),
+                )
+              : Center(child: Text(err!))
           : ListView.builder(
               itemCount: rows.length,
               itemBuilder: (c, i) {

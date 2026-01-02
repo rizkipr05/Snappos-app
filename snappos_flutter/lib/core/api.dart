@@ -1,51 +1,46 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'storage.dart';
 
 class Api {
-  // Android emulator: 10.0.2.2
-  // Chrome / Web: localhost
   static const String baseUrl =
-      "http://192.168.11.205/snappos_api/public/index.php";
+      "http://192.168.11.205:8080/snappos_api/public/index.php";
 
-  static Future<Map<String, dynamic>> get(String path, {String? token}) async {
-    final uri = Uri.parse("$baseUrl$path");
+  static Future<dynamic> get(String path, {String? token}) async {
+    token ??= await Storage.getToken();
 
     final res = await http.get(
-      uri,
+      Uri.parse("$baseUrl$path"),
       headers: {
         "Accept": "application/json",
-        if (token != null) "Authorization": "Bearer $token",
+        if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
       },
     );
 
-    final data = json.decode(res.body.isEmpty ? "{}" : res.body);
-    if (res.statusCode >= 400) {
-      throw Exception(data["message"] ?? "Request failed");
-    }
-    return data;
+    final body = res.body.isNotEmpty ? jsonDecode(res.body) : {};
+    if (res.statusCode >= 400) throw body["message"] ?? "Request failed";
+    return body;
   }
 
-  static Future<Map<String, dynamic>> post(
-    String path, {
+  static Future<dynamic> post(
+    String path,
+    Map<String, dynamic> data, {
     String? token,
-    Map<String, dynamic>? body,
   }) async {
-    final uri = Uri.parse("$baseUrl$path");
+    token ??= await Storage.getToken();
 
     final res = await http.post(
-      uri,
+      Uri.parse("$baseUrl$path"),
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        if (token != null) "Authorization": "Bearer $token",
+        if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
       },
-      body: json.encode(body ?? {}),
+      body: jsonEncode(data),
     );
 
-    final data = json.decode(res.body.isEmpty ? "{}" : res.body);
-    if (res.statusCode >= 400) {
-      throw Exception(data["message"] ?? "Request failed");
-    }
-    return data;
+    final body = res.body.isNotEmpty ? jsonDecode(res.body) : {};
+    if (res.statusCode >= 400) throw body["message"] ?? "Request failed";
+    return body;
   }
 }

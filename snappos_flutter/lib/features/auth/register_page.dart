@@ -28,7 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       await Api.post(
         "/api/auth/register",
-        body: {
+        {
           "name": nameC.text.trim(),
           "email": emailC.text.trim(),
           "password": passC.text,
