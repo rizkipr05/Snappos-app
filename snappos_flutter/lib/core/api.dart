@@ -4,7 +4,7 @@ import 'storage.dart';
 
 class Api {
   static const String baseUrl =
-      "http://192.168.11.205:8080/snappos_api/public/index.php";
+      "http://10.109.104.77:8080/snappos_api/public/index.php";
 
   static Future<dynamic> get(String path, {String? token}) async {
     token ??= await Storage.getToken();
