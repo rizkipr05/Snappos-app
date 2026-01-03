@@ -22,6 +22,8 @@ class _ProductListPageState extends State<ProductListPage> {
   bool loading = false;
   String? err;
   String? role;
+  String name = "Kasir";
+  String email = "Snappos System";
 
   // Cart
   final CartController cart = CartController();
@@ -35,7 +37,15 @@ class _ProductListPageState extends State<ProductListPage> {
 
   Future<void> _checkRole() async {
     final r = await Storage.getRole();
-    if (mounted) setState(() => role = r);
+    final n = await Storage.getName();
+    final e = await Storage.getEmail();
+    if (mounted) {
+       setState(() {
+         role = r;
+         if (n != null) name = n;
+         if (e != null) email = e;
+       });
+    }
   }
 
   Future<void> load() async {
@@ -174,10 +184,10 @@ class _ProductListPageState extends State<ProductListPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const UserAccountsDrawerHeader(
-              decoration: BoxDecoration(color: Colors.deepPurple),
-              accountName: Text("Petugas"),
-              accountEmail: Text("Snappos System"),
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(color: Colors.deepPurple),
+              accountName: Text(name),
+              accountEmail: Text(email),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(
@@ -202,6 +212,14 @@ class _ProductListPageState extends State<ProductListPage> {
               leading: const Icon(Icons.store),
               title: const Text('Katalog Produk'),
               onTap: () => Navigator.pop(context),
+            ),
+             ListTile(
+              leading: const Icon(Icons.shopping_cart),
+              title: const Text('Keranjang'),
+              onTap: () {
+                 Navigator.pop(context);
+                 Navigator.push(context, MaterialPageRoute(builder: (_) => CartPage(cart: cart))); 
+              },
             ),
             ListTile(
               leading: const Icon(Icons.history),

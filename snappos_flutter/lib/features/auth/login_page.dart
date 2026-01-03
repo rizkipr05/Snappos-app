@@ -27,15 +27,17 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final res = await Api.post("/api/auth/login", {
         "email": emailC.text,
-        "password": passC.text,
+        "password": passC.text,k
       });
 
       final token = res["token"];
       final user = res["user"];
       
       await Storage.setToken(token);
-      if (user != null && user["role"] != null) {
-        await Storage.setRole(user["role"].toString());
+      if (user != null) {
+        if (user["role"] != null) await Storage.setRole(user["role"].toString());
+        if (user["name"] != null) await Storage.setName(user["name"].toString());
+        if (user["email"] != null) await Storage.setEmail(user["email"].toString());
       }
 
       if (!mounted) return;

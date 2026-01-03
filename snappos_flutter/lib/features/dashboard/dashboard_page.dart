@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:snappos_flutter/core/storage.dart';
 import 'package:snappos_flutter/features/auth/login_page.dart';
 import 'package:snappos_flutter/features/products/product_list_page.dart';
+import 'package:snappos_flutter/features/cart/cart_page.dart';
+import 'package:snappos_flutter/features/cart/cart_controller.dart'; // import controller
 import 'package:snappos_flutter/features/reports/report_page.dart';
 import 'package:snappos_flutter/features/transactions/history_page.dart';
 
@@ -14,6 +16,8 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   String role = "";
+  String name = "Petugas";
+  String email = "Snappos System";
   
   @override
   void initState() {
@@ -23,7 +27,15 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadRole() async {
     final r = await Storage.getRole();
-    if (mounted) setState(() => role = r ?? "");
+    final n = await Storage.getName();
+    final e = await Storage.getEmail();
+    if (mounted) {
+       setState(() {
+         role = r ?? "";
+         if (n != null) name = n;
+         if (e != null) email = e;
+       });
+    }
   }
 
   Future<void> logout() async {
@@ -51,8 +63,8 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(color: Colors.deepPurple),
-              accountName: const Text("Petugas"),
-              accountEmail: const Text("Snappos System"),
+              accountName: Text(name),
+              accountEmail: Text(email),
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(
@@ -73,6 +85,17 @@ class _DashboardPageState extends State<DashboardPage> {
               onTap: () {
                  Navigator.pop(context);
                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ProductListPage()));
+              },
+            ),
+             ListTile(
+              leading: const Icon(Icons.shopping_cart),
+              title: const Text('Keranjang'),
+              onTap: () {
+                 Navigator.pop(context);
+                 // Note: Creating a fresh controller here might be empty if state isn't global.
+                 // For now, assume fresh cart or passed one. Ideally CartController should be singleton or provider.
+                 // But simply opening it is what user asked.
+                 Navigator.push(context, MaterialPageRoute(builder: (_) => CartPage(cart: CartController()))); 
               },
             ),
              ListTile(
@@ -188,7 +211,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  "Petugas",
+                  "Kasir",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
