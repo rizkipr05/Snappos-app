@@ -236,15 +236,26 @@ class _ProductListPageState extends State<ProductListPage> {
                         Expanded(
                           child: Stack(
                             children: [
-                              Container(
-                                color: Colors.grey.shade100,
-                                width: double.infinity,
-                                child: Icon(
-                                  Icons.inventory_2_outlined,
-                                  size: 48,
-                                  color: Colors.deepPurple.shade100,
-                                ),
-                              ),
+                              (p["image"] != null && p["image"].toString().isNotEmpty)
+                                  ? Image.network(
+                                      "${Api.baseUrl.replaceAll('/index.php', '')}/${p['image']}",
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      errorBuilder: (c, o, s) => Container(
+                                        color: Colors.grey.shade100,
+                                        width: double.infinity,
+                                        child: Icon(Icons.broken_image, color: Colors.grey.shade400),
+                                      ),
+                                    )
+                                  : Container(
+                                      color: Colors.grey.shade100,
+                                      width: double.infinity,
+                                      child: Icon(
+                                        Icons.inventory_2_outlined,
+                                        size: 48,
+                                        color: Colors.deepPurple.shade100,
+                                      ),
+                                    ),
                               if (isAdmin)
                                 Positioned(
                                   top: 4,

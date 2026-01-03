@@ -9,16 +9,38 @@ require_role($user, ["admin"]); // cuma admin
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") json(["message"=>"Method not allowed"], 405);
 
-$data = body_json();
+// Handle multipart or JSON
+$contentType = $_SERVER["CONTENT_TYPE"] ?? "";
+if (strpos($contentType, "application/json") !== false) {
+    $data = body_json();
+} else {
+    $data = $_POST;
+}
+
 require_fields($data, ["name","price","stock"]);
 
 $sku = trim($data["sku"] ?? "");
 $name = trim($data["name"]);
 $price = (int)$data["price"];
 $stock = (int)$data["stock"];
+$imagePath = null;
+
+// Handle Image Upload
+if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+    $uploadDir = __DIR__ . "/../../public/uploads/products/";
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+    
+    $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+    $filename = uniqid("prod_") . "." . $ext;
+    $dest = $uploadDir . $filename;
+    
+    if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
+        $imagePath = "uploads/products/" . $filename;
+    }
+}
 
 $pdo = db();
-$st = $pdo->prepare("INSERT INTO products (sku,name,price,stock) VALUES (?,?,?,?)");
-$st->execute([$sku ?: null, $name, $price, $stock]);
+$st = $pdo->prepare("INSERT INTO products (sku,name,price,stock,image) VALUES (?,?,?,?,?)");
+$st->execute([$sku ?: null, $name, $price, $stock, $imagePath]);
 
 json(["message"=>"Product created", "id"=>$pdo->lastInsertId()], 201);

@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/api.dart';
 import '../../core/storage.dart';
 
@@ -18,6 +20,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
   late TextEditingController stockC;
   late TextEditingController skuC;
 
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+
   bool loading = false;
   String? err;
 
@@ -29,6 +34,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
     priceC = TextEditingController(text: p?["price"]?.toString() ?? "");
     stockC = TextEditingController(text: p?["stock"]?.toString() ?? "");
     skuC = TextEditingController(text: p?["sku"]?.toString() ?? "");
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
   }
 
   Future<void> save() async {
@@ -43,18 +57,29 @@ class _ProductFormPageState extends State<ProductFormPage> {
       final token = await Storage.getToken();
       final data = {
         "name": nameC.text.trim(),
-        "price": int.parse(priceC.text.trim()),
-        "stock": int.parse(stockC.text.trim()),
+        "price": priceC.text.trim(),
+        "stock": stockC.text.trim(),
         "sku": skuC.text.trim(),
       };
 
       if (widget.product == null) {
         // CREATE
-        await Api.post("/api/products", data, token: token);
+        await Api.postMultipart(
+          "/api/products", 
+          data, 
+          token: token,
+          filePath: _imageFile?.path,
+        );
       } else {
         // UPDATE
         final id = widget.product!["id"];
-        await Api.put("/api/products/$id", data, token: token);
+        await Api.postMultipart(
+          "/api/products/$id", 
+          data, 
+          token: token,
+          filePath: _imageFile?.path,
+          method: "PUT",
+        );
       }
 
       if (!mounted) return;
@@ -100,6 +125,42 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 decoration: const InputDecoration(labelText: "Nama Produk"),
                 validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
               ),
+              const SizedBox(height: 16),
+              
+              // Image Picker
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: _imageFile != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(_imageFile!, fit: BoxFit.cover),
+                        )
+                      : (widget.product?["image"] != null && widget.product!["image"].isNotEmpty)
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                "${Api.baseUrl.replaceAll('/index.php', '')}/${widget.product!["image"]}",
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, o, s) => const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                              ),
+                            )
+                          : const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.camera_alt, size: 50, color: Colors.grey),
+                                Text("Ketuk untuk tambah gambar", style: TextStyle(color: Colors.grey)),
+                              ],
+                            ),
+                ),
+              ),
+              const SizedBox(height: 16),
               const SizedBox(height: 16),
               Row(
                 children: [
