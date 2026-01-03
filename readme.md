@@ -2,7 +2,7 @@
 
 ![Snappos Banner](https://via.placeholder.com/1200x400/673AB7/ffffff?text=Snappos+POS)
 
-**Snappos** adalah aplikasi Point of Sale (Kasir) modern yang dirancang untuk efisiensi bisnis ritel kecil hingga menengah. Aplikasi ini terdiri dari *Backend* berbasis PHP Native yang ringan dan *Frontend* mobile/web berbasis Flutter dengan desain Material 3 yang elegan.
+**Snappos** adalah aplikasi Point of Sale (Kasir) modern yang dirancang untuk efisiensi bisnis ritel kecil hingga menengah. Aplikasi ini terdiri dari *Backend* berbasis PHP Native yang ringan dan *Frontend* mobile berbasis Flutter dengan desain Material 3 yang elegan.
 
 ---
 
