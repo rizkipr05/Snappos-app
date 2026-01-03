@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/storage.dart';
 import 'features/auth/login_page.dart';
+import 'features/dashboard/dashboard_page.dart';
 import 'features/products/product_list_page.dart';
 
 void main() {
@@ -101,7 +102,7 @@ class _BootState extends State<Boot> {
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const ProductListPage()),
+        MaterialPageRoute(builder: (_) => const DashboardPage()),
       );
     }
   }

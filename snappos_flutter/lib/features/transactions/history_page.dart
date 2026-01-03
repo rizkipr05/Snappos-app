@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:snappos_flutter/core/api.dart';
 import 'package:snappos_flutter/core/storage.dart';
-import 'transaction_detail_page.dart';
+import 'receipt_page.dart';
 import '../auth/login_page.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -89,7 +89,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TransactionDetailPage(id: id),
+                        builder: (_) => ReceiptPage(transactionId: id),
                       ),
                     ),
                     child: Padding(

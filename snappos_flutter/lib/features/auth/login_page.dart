@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:snappos_flutter/core/api.dart';
 import 'package:snappos_flutter/core/storage.dart';
+import '../dashboard/dashboard_page.dart';
 import '../products/product_list_page.dart';
 import 'register_page.dart';
 
@@ -40,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const ProductListPage()),
+        MaterialPageRoute(builder: (_) => const DashboardPage()),
       );
     } catch (e) {
       setState(() => err = e.toString().replaceAll("Exception:", "").trim());

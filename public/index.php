@@ -87,5 +87,11 @@ if (preg_match("#^/api/transactions/(\d+)$#", $path, $m) && $method === "GET") {
   exit;
 }
 
+// REPORTS
+if ($path === "/api/reports" && $method === "GET") {
+  require __DIR__ . "/../modules/reports/index.php";
+  exit;
+}
+
 json(["marker" => "NEW_ROUTER_IS_RUNNING", "uri" => $_SERVER["REQUEST_URI"]]);
 exit;

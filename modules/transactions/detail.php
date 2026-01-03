@@ -13,8 +13,9 @@ $pdo = db();
 
 try {
   // 1. Get Transaction
+  // 1. Get Transaction
   $st = $pdo->prepare("
-    SELECT t.id, t.total, t.paid, t.change_money, t.created_at, u.name AS cashier_name
+    SELECT t.id, t.total, t.paid, t.change_money, t.created_at, t.customer_name, u.name AS cashier_name
     FROM transactions t
     JOIN users u ON u.id = t.user_id
     WHERE t.id = ?
@@ -27,7 +28,7 @@ try {
 
   // 2. Get Items (JOIN with products to get name)
   $stItems = $pdo->prepare("
-    SELECT ti.id, p.name, ti.price, ti.qty, ti.subtotal
+    SELECT ti.id, p.name AS product_name, ti.price, ti.qty, ti.subtotal
     FROM transaction_items ti
     JOIN products p ON p.id = ti.product_id
     WHERE ti.transaction_id = ?
@@ -35,9 +36,11 @@ try {
   $stItems->execute([$id]);
   $items = $stItems->fetchAll();
 
+  // Combine
+  $trx["items"] = $items;
+
   json([
-    "transaction" => $trx,
-    "items" => $items
+    "data" => $trx
   ]);
 
 } catch (Exception $e) {

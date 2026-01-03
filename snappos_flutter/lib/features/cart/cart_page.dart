@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:snappos_flutter/core/api.dart';
 import 'package:snappos_flutter/core/storage.dart';
+import 'package:snappos_flutter/features/transactions/receipt_page.dart';
 import 'cart_controller.dart';
 
 class CartPage extends StatefulWidget {
@@ -13,6 +14,7 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   final paidC = TextEditingController();
+  final customerC = TextEditingController(); // [NEW] Input Customer Name
   bool loading = false;
   String? err;
   String? ok;
@@ -32,6 +34,7 @@ class _CartPageState extends State<CartPage> {
         "/api/checkout",
         {
           "paid": paid,
+          "customer_name": customerC.text.trim(), // [NEW] Send to backend
           "items": widget.cart.items.map((e) => e.toApi()).toList(),
         },
         token: token,
@@ -59,6 +62,25 @@ class _CartPageState extends State<CartPage> {
               Text("Total: Rp $total", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Text("Kembalian: Rp $change", style: const TextStyle(fontSize: 16, color: Colors.grey)),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                   Navigator.pop(context); // close dialog
+                   Navigator.pop(context); // close cart page
+                   
+                   final trxId = res["transaction_id"];
+                   if (trxId != null) {
+                     Navigator.push(
+                       context,
+                       MaterialPageRoute(
+                         builder: (_) => ReceiptPage(transactionId: int.parse(trxId.toString())),
+                       ),
+                     );
+                   }
+                },
+                icon: const Icon(Icons.print),
+                label: const Text("CETAK STRUK"),
+              ),
             ],
           ),
           actions: [
@@ -75,6 +97,7 @@ class _CartPageState extends State<CartPage> {
       
       widget.cart.clear();
       paidC.clear();
+      customerC.clear();
     } catch (e) {
       setState(() => err = e.toString().replaceAll("Exception:", "").trim());
     } finally {
@@ -218,12 +241,23 @@ class _CartPageState extends State<CartPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: customerC,
+                      decoration: const InputDecoration(
+                        labelText: "Nama Pelanggan (Opsional)",
+                        prefixIcon: Icon(Icons.person_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: paidC,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: "Uang Diterima (Rp)",
                         prefixIcon: Icon(Icons.money),
+                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 24),

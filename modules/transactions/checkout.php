@@ -13,6 +13,8 @@ require_fields($data, ["items","paid"]);
 
 $items = $data["items"];
 $paid = (int)$data["paid"];
+$customerName = isset($data["customer_name"]) ? trim($data["customer_name"]) : null;
+
 if (!is_array($items) || count($items) === 0) json(["message"=>"Items required"], 422);
 
 $pdo = db();
@@ -50,8 +52,8 @@ try {
   $change = $paid - $total;
 
   // insert transaksi
-  $st = $pdo->prepare("INSERT INTO transactions (user_id,total,paid,change_money) VALUES (?,?,?,?)");
-  $st->execute([(int)$user["id"], $total, $paid, $change]);
+  $st = $pdo->prepare("INSERT INTO transactions (user_id,total,paid,change_money,customer_name) VALUES (?,?,?,?,?)");
+  $st->execute([(int)$user["id"], $total, $paid, $change, $customerName]);
   $trxId = (int)$pdo->lastInsertId();
 
   // items + update stock
