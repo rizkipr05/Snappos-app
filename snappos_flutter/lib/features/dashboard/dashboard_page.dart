@@ -117,7 +117,7 @@ class _DashboardPageState extends State<DashboardPage> {
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _menuItem(
-                  "POS Kasir",
+                  "Katalog Produk",
                   Icons.store,
                   Colors.deepPurple,
                   () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProductListPage())),
