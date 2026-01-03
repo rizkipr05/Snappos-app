@@ -5,6 +5,11 @@ require_once __DIR__ . "/../core/response.php";
 $method  = $_SERVER["REQUEST_METHOD"] ?? "GET";
 $uriPath = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH) ?? "/";
 
+// Handle Method Override (e.g. for Multipart PUT sent as POST)
+if ($method === "POST" && isset($_POST["_method"])) {
+    $method = strtoupper($_POST["_method"]);
+}
+
 $base1 = "/snappos_api/public";
 $base2 = "/snappos_api";
 

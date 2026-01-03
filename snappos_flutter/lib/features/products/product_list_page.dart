@@ -5,7 +5,6 @@ import '../auth/login_page.dart';
 import '../cart/cart_controller.dart';
 import '../cart/cart_page.dart';
 import '../transactions/history_page.dart';
-import '../users/user_list_page.dart';
 import 'product_form_page.dart';
 
 class ProductListPage extends StatefulWidget {
@@ -20,7 +19,7 @@ class _ProductListPageState extends State<ProductListPage> {
   bool loading = false;
   String? err;
   String? role;
-  
+
   // Cart
   final CartController cart = CartController();
 
@@ -30,10 +29,10 @@ class _ProductListPageState extends State<ProductListPage> {
     _checkRole();
     load();
   }
-  
+
   Future<void> _checkRole() async {
     final r = await Storage.getRole();
-    setState(() => role = r);
+    if (mounted) setState(() => role = r);
   }
 
   Future<void> load() async {
@@ -45,12 +44,10 @@ class _ProductListPageState extends State<ProductListPage> {
     try {
       final token = await Storage.getToken();
       final res = await Api.get("/api/products", token: token);
+
       final data = (res["data"] as List).cast<Map<String, dynamic>>();
       setState(() => products = data);
     } catch (e) {
-      if (e.toString().contains("401")) { 
-        // handle token expired in UI
-      }
       setState(() => err = e.toString().replaceAll("Exception:", "").trim());
     } finally {
       if (mounted) setState(() => loading = false);
@@ -73,8 +70,14 @@ class _ProductListPageState extends State<ProductListPage> {
         title: const Text("Hapus Produk?"),
         content: const Text("Produk akan dihapus permanen."),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Hapus", style: TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Batal"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
@@ -87,11 +90,33 @@ class _ProductListPageState extends State<ProductListPage> {
       await Api.delete("/api/products/$id", token: token);
       await load();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Produk berhasil dihapus")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Produk berhasil dihapus")),
+      );
     } catch (e) {
       setState(() => err = e.toString().replaceAll("Exception:", "").trim());
       setState(() => loading = false);
-    } 
+    }
+  }
+
+  /// Bangun URL gambar yang aman:
+  /// - jika value sudah http/https => pakai langsung
+  /// - jika value path relatif (uploads/...) => gabungkan ke host public (tanpa index.php)
+  String? buildImageUrl(dynamic image) {
+    if (image == null) return null;
+    final s = image.toString().trim();
+    if (s.isEmpty) return null;
+
+    if (s.startsWith("http://") || s.startsWith("https://")) return s;
+
+    // Api.baseUrl biasanya: http://ip:8080/snappos_api/public/index.php
+    // Untuk file static, kita butuh: http://ip:8080/snappos_api/public/
+    final basePublic = Api.baseUrl
+        .replaceAll("/index.php", "")
+        .replaceAll(RegExp(r"/+$"), "");
+
+    final cleanPath = s.replaceFirst(RegExp(r"^/+"), "");
+    return "$basePublic/$cleanPath";
   }
 
   @override
@@ -106,7 +131,8 @@ class _ProductListPageState extends State<ProductListPage> {
             Stack(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.shopping_cart_outlined, color: Colors.deepPurple),
+                  icon: const Icon(Icons.shopping_cart_outlined,
+                      color: Colors.deepPurple),
                   onPressed: () async {
                     await Navigator.push(
                       context,
@@ -186,186 +212,213 @@ class _ProductListPageState extends State<ProductListPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : err != null
-          ? err!.toLowerCase().contains("unauthorized") || err!.toLowerCase().contains("unauthenticated")
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.lock_clock_outlined, size: 64, color: Colors.orange),
-                      const SizedBox(height: 16),
-                      Text("Sesi Habis", style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: 8),
-                      const Text("Silakan login kembali untuk melanjutkan"),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: logout,
-                        style: ElevatedButton.styleFrom(
-                          maximumSize: const Size(200, 50),
-                        ),
-                        child: const Text("LOGIN ULANG"),
+              ? err!.toLowerCase().contains("unauthorized") ||
+                      err!.toLowerCase().contains("unauthenticated")
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.lock_clock_outlined,
+                              size: 64, color: Colors.orange),
+                          const SizedBox(height: 16),
+                          Text("Sesi Habis",
+                              style: Theme.of(context).textTheme.titleLarge),
+                          const SizedBox(height: 8),
+                          const Text("Silakan login kembali untuk melanjutkan"),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: logout,
+                            style: ElevatedButton.styleFrom(
+                              maximumSize: const Size(200, 50),
+                            ),
+                            child: const Text("LOGIN ULANG"),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
-              : Center(child: Text(err!))
-          : RefreshIndicator(
-              onRefresh: load,
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75, // Slightly taller for admin controls
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: products.length,
-                itemBuilder: (c, i) {
-                  final p = products[i];
-                  final id = int.parse(p["id"].toString());
-                  final name = p["name"].toString();
-                  final price = int.parse(p["price"].toString());
-                  final stock = int.parse(p["stock"].toString());
-                  final isOos = stock <= 0;
-
-                  return Card(
-                    elevation: 2,
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              (p["image"] != null && p["image"].toString().isNotEmpty)
-                                  ? Image.network(
-                                      "${Api.baseUrl.replaceAll('/index.php', '')}/${p['image']}",
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      errorBuilder: (c, o, s) => Container(
-                                        color: Colors.grey.shade100,
-                                        width: double.infinity,
-                                        child: Icon(Icons.broken_image, color: Colors.grey.shade400),
-                                      ),
-                                    )
-                                  : Container(
-                                      color: Colors.grey.shade100,
-                                      width: double.infinity,
-                                      child: Icon(
-                                        Icons.inventory_2_outlined,
-                                        size: 48,
-                                        color: Colors.deepPurple.shade100,
-                                      ),
-                                    ),
-                              if (isAdmin)
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.8),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: IconButton(
-                                          icon: const Icon(Icons.edit, size: 18, color: Colors.blue),
-                                          onPressed: () async {
-                                            final refresh = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => ProductFormPage(product: p),
-                                              ),
-                                            );
-                                            if (refresh == true) load();
-                                          },
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.8),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: IconButton(
-                                          icon: const Icon(Icons.delete, size: 18, color: Colors.red),
-                                          onPressed: () => deleteProduct(id),
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Rp $price",
-                                style: TextStyle(
-                                  color: Colors.deepPurple.shade700,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                isOos ? "Stok Habis" : "Stok: $stock",
-                                style: TextStyle(
-                                  color: isOos ? Colors.red : Colors.grey.shade600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: isOos
-                                      ? null
-                                      : () {
-                                          cart.add(id, name, price);
-                                          setState(() {});
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('$name masuk keranjang'),
-                                              duration: const Duration(milliseconds: 500),
-                                              behavior: SnackBarBehavior.floating,
-                                            ),
-                                          );
-                                        },
-                                  style: OutlinedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: const Text("TAMBAH"),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    )
+                  : Center(child: Text(err!))
+              : RefreshIndicator(
+                  onRefresh: load,
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
                     ),
-                  );
-                },
-              ),
-            ),
+                    itemCount: products.length,
+                    itemBuilder: (c, i) {
+                      final p = products[i];
+                      final id = int.parse(p["id"].toString());
+                      final name = p["name"].toString();
+                      final price = int.parse(p["price"].toString());
+                      final stock = int.parse(p["stock"].toString());
+                      final isOos = stock <= 0;
+
+                      final imgUrl = buildImageUrl(p["image"]);
+
+                      return Card(
+                        elevation: 2,
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  (imgUrl != null)
+                                      ? Image.network(
+                                          imgUrl,
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                          errorBuilder: (c, o, s) => Container(
+                                            color: Colors.grey.shade100,
+                                            width: double.infinity,
+                                            child: Icon(Icons.broken_image,
+                                                color: Colors.grey.shade400),
+                                          ),
+                                        )
+                                      : Container(
+                                          color: Colors.grey.shade100,
+                                          width: double.infinity,
+                                          child: Icon(
+                                            Icons.inventory_2_outlined,
+                                            size: 48,
+                                            color:
+                                                Colors.deepPurple.shade100,
+                                          ),
+                                        ),
+                                  if (isAdmin)
+                                    Positioned(
+                                      top: 4,
+                                      right: 4,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.white.withOpacity(0.8),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: IconButton(
+                                              icon: const Icon(Icons.edit,
+                                                  size: 18,
+                                                  color: Colors.blue),
+                                              onPressed: () async {
+                                                final refresh =
+                                                    await Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        ProductFormPage(
+                                                            product: p),
+                                                  ),
+                                                );
+                                                if (refresh == true) load();
+                                              },
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.white.withOpacity(0.8),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: IconButton(
+                                              icon: const Icon(Icons.delete,
+                                                  size: 18,
+                                                  color: Colors.red),
+                                              onPressed: () =>
+                                                  deleteProduct(id),
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Rp $price",
+                                    style: TextStyle(
+                                      color: Colors.deepPurple.shade700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    isOos ? "Stok Habis" : "Stok: $stock",
+                                    style: TextStyle(
+                                      color: isOos
+                                          ? Colors.red
+                                          : Colors.grey.shade600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton(
+                                      onPressed: isOos
+                                          ? null
+                                          : () {
+                                              cart.add(id, name, price);
+                                              setState(() {});
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                      '$name masuk keranjang'),
+                                                  duration: const Duration(
+                                                      milliseconds: 500),
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            },
+                                      style: OutlinedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: const Text("TAMBAH"),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
       floatingActionButton: isAdmin
           ? FloatingActionButton(
               onPressed: () async {

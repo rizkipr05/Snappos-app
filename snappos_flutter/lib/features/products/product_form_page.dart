@@ -5,7 +5,7 @@ import '../../core/api.dart';
 import '../../core/storage.dart';
 
 class ProductFormPage extends StatefulWidget {
-  final Map<String, dynamic>? product; // If null, it's "Create" mode
+  final Map<String, dynamic>? product; // null = create
   const ProductFormPage({super.key, this.product});
 
   @override
@@ -14,7 +14,7 @@ class ProductFormPage extends StatefulWidget {
 
 class _ProductFormPageState extends State<ProductFormPage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController nameC;
   late TextEditingController priceC;
   late TextEditingController stockC;
@@ -36,18 +36,43 @@ class _ProductFormPageState extends State<ProductFormPage> {
     skuC = TextEditingController(text: p?["sku"]?.toString() ?? "");
   }
 
+  @override
+  void dispose() {
+    nameC.dispose();
+    priceC.dispose();
+    stockC.dispose();
+    skuC.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+      setState(() => _imageFile = File(pickedFile.path));
     }
+  }
+
+  String? buildImageUrl(dynamic image) {
+    if (image == null) return null;
+    final s = image.toString().trim();
+    if (s.isEmpty) return null;
+
+    // sudah URL full
+    if (s.startsWith("http://") || s.startsWith("https://")) return s;
+
+    // base file static: baseUrl tanpa /index.php
+    final basePublic = Api.baseUrl
+        .replaceAll("/index.php", "")
+        .replaceAll(RegExp(r"/+$"), "");
+
+    final cleanPath = s.replaceFirst(RegExp(r"^/+"), "");
+    return "$basePublic/$cleanPath";
   }
 
   Future<void> save() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       loading = true;
       err = null;
@@ -55,6 +80,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
     try {
       final token = await Storage.getToken();
+
       final data = {
         "name": nameC.text.trim(),
         "price": priceC.text.trim(),
@@ -65,25 +91,25 @@ class _ProductFormPageState extends State<ProductFormPage> {
       if (widget.product == null) {
         // CREATE
         await Api.postMultipart(
-          "/api/products", 
-          data, 
+          "/api/products",
+          data,
           token: token,
-          filePath: _imageFile?.path,
+          filePath: _imageFile?.path, // boleh null
         );
       } else {
         // UPDATE
-        final id = widget.product!["id"];
+        final id = widget.product!["id"].toString();
         await Api.postMultipart(
-          "/api/products/$id", 
-          data, 
+          "/api/products/$id",
+          data,
           token: token,
-          filePath: _imageFile?.path,
+          filePath: _imageFile?.path, // kalau null, jangan ubah image
           method: "PUT",
         );
       }
 
       if (!mounted) return;
-      Navigator.pop(context, true); // Return true to indicate success
+      Navigator.pop(context, true);
     } catch (e) {
       setState(() => err = e.toString().replaceAll("Exception:", "").trim());
     } finally {
@@ -94,10 +120,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.product != null;
+    final imgUrl = buildImageUrl(widget.product?["image"]);
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdit ? "Edit Produk" : "Tambah Produk"),
-      ),
+      appBar: AppBar(title: Text(isEdit ? "Edit Produk" : "Tambah Produk")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -105,7 +131,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-               if (err != null) ...[
+              if (err != null) ...[
                 Container(
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 16),
@@ -123,44 +149,52 @@ class _ProductFormPageState extends State<ProductFormPage> {
               TextFormField(
                 controller: nameC,
                 decoration: const InputDecoration(labelText: "Nama Produk"),
-                validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? "Wajib diisi"
+                    : null,
               ),
               const SizedBox(height: 16),
-              
+
               // Image Picker
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
-                  height: 150,
+                  height: 160,
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade400),
                   ),
                   child: _imageFile != null
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                           child: Image.file(_imageFile!, fit: BoxFit.cover),
                         )
-                      : (widget.product?["image"] != null && widget.product!["image"].isNotEmpty)
+                      : (imgUrl != null)
                           ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                               child: Image.network(
-                                "${Api.baseUrl.replaceAll('/index.php', '')}/${widget.product!["image"]}",
+                                imgUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (c, o, s) => const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                                errorBuilder: (c, o, s) => const Center(
+                                  child: Icon(Icons.broken_image,
+                                      size: 54, color: Colors.grey),
+                                ),
                               ),
                             )
                           : const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.camera_alt, size: 50, color: Colors.grey),
-                                Text("Ketuk untuk tambah gambar", style: TextStyle(color: Colors.grey)),
+                                Icon(Icons.camera_alt,
+                                    size: 50, color: Colors.grey),
+                                SizedBox(height: 8),
+                                Text("Ketuk untuk tambah gambar",
+                                    style: TextStyle(color: Colors.grey)),
                               ],
                             ),
                 ),
               ),
-              const SizedBox(height: 16),
+
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -169,7 +203,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                       controller: priceC,
                       decoration: const InputDecoration(labelText: "Harga (Rp)"),
                       keyboardType: TextInputType.number,
-                      validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? "Wajib diisi"
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -178,7 +214,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                       controller: stockC,
                       decoration: const InputDecoration(labelText: "Stok Awal"),
                       keyboardType: TextInputType.number,
-                      validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? "Wajib diisi"
+                          : null,
                     ),
                   ),
                 ],
@@ -186,7 +224,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: skuC,
-                decoration: const InputDecoration(labelText: "SKU / Kode Barang (Opsional)"),
+                decoration: const InputDecoration(
+                    labelText: "SKU / Kode Barang (Opsional)"),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
