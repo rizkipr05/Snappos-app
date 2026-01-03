@@ -55,7 +55,7 @@ class SnapposApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.deepPurple,
             foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(50),
+            minimumSize: const Size(88, 50),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),

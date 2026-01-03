@@ -5,7 +5,7 @@ require_once __DIR__ . "/../../core/utils.php";
 require_once __DIR__ . "/../../core/auth.php";
 
 $user = require_auth();
-require_role($user, ["admin"]); // cuma admin
+require_role($user, ["admin", "cashier"]); // admin & cashier
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") json(["message"=>"Method not allowed"], 405);
 

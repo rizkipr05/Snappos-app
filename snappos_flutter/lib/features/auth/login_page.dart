@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final res = await Api.post("/api/auth/login", {
         "email": emailC.text,
-        "password": passC.text,k
+        "password": passC.text,
       });
 
       final token = res["token"];

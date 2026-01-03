@@ -5,7 +5,7 @@ require_once __DIR__ . "/../../core/utils.php";
 require_once __DIR__ . "/../../core/auth.php";
 
 $user = require_auth();
-require_role($user, ["admin"]);
+require_role($user, ["admin", "cashier"]);
 
 // Allow POST for multipart/form-data support (method spoofing or direct POST)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["_method"]) && strtoupper($_POST["_method"]) === "PUT") {

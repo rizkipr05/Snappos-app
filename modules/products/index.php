@@ -3,7 +3,7 @@ require_once __DIR__ . "/../../config/db.php";
 require_once __DIR__ . "/../../core/response.php";
 require_once __DIR__ . "/../../core/auth.php";
 
-$user = require_auth(); // semua role boleh lihat
+$user = require_auth(); 
 
 $pdo = db();
 $rows = $pdo->query("

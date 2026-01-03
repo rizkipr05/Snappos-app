@@ -4,7 +4,7 @@ require_once __DIR__ . "/../../core/response.php";
 require_once __DIR__ . "/../../core/auth.php";
 
 $user = require_auth();
-require_role($user, ["admin"]);
+require_role($user, ["admin", "cashier"]);
 
 if ($_SERVER["REQUEST_METHOD"] !== "DELETE") json(["message"=>"Method not allowed"], 405);
 

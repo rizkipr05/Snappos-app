@@ -16,7 +16,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   String role = "";
-  String name = "Petugas";
+  String name = "Kasir";
   String email = "Snappos System";
   
   @override
