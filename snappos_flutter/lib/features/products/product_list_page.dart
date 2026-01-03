@@ -255,7 +255,7 @@ class _ProductListPageState extends State<ProductListPage> {
                           ElevatedButton(
                             onPressed: logout,
                             style: ElevatedButton.styleFrom(
-                              maximumSize: const Size(200, 50),
+                              fixedSize: const Size(200, 50),
                             ),
                             child: const Text("LOGIN ULANG"),
                           ),

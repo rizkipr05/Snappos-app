@@ -5,7 +5,7 @@ import 'storage.dart';
 class Api {
   /// BASE API (router)
   static const String baseUrl =
-      "http://10.109.104.77:8080/snappos_api/public/index.php";
+      "http://localhost:8080/snappos_api/public/index.php";
 
   /// BASE PUBLIC (untuk file static: images)
   static String get publicBaseUrl => baseUrl
