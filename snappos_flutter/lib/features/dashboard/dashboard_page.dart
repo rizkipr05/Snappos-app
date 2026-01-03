@@ -37,7 +37,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = role == "admin";
+    // We treat everyone as having full access now
+    const isAdmin = true;
 
     return Scaffold(
       appBar: AppBar(
@@ -50,12 +51,12 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(color: Colors.deepPurple),
-              accountName: Text(isAdmin ? "Administrator" : "Kasir"),
+              accountName: const Text("Petugas"),
               accountEmail: const Text("Snappos System"),
-              currentAccountPicture: CircleAvatar(
+              currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(
-                  isAdmin ? Icons.admin_panel_settings : Icons.person,
+                  Icons.person,
                   size: 32,
                   color: Colors.deepPurple,
                 ),
@@ -82,18 +83,17 @@ class _DashboardPageState extends State<DashboardPage> {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage()));
               },
             ),
-            if (isAdmin)
-               ListTile(
-                leading: const Icon(Icons.bar_chart),
-                title: const Text('Laporan Penjualan'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ReportPage()),
-                  );
-                },
-              ),
+             ListTile(
+              leading: const Icon(Icons.bar_chart),
+              title: const Text('Laporan Penjualan'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReportPage()),
+                );
+              },
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
@@ -107,7 +107,7 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            _buildWelcomeCard(isAdmin),
+            _buildWelcomeCard(),
             const SizedBox(height: 32),
             GridView.count(
               shrinkWrap: true,
@@ -128,13 +128,12 @@ class _DashboardPageState extends State<DashboardPage> {
                   Colors.orange,
                   () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage())),
                 ),
-                if (isAdmin)
-                  _menuItem(
-                    "Laporan",
-                    Icons.bar_chart,
-                    Colors.blue,
-                    () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportPage())),
-                  ),
+                _menuItem(
+                  "Laporan",
+                  Icons.bar_chart,
+                  Colors.blue,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportPage())),
+                ),
                 _menuItem(
                   "Keluar",
                   Icons.logout,
@@ -149,7 +148,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildWelcomeCard(bool isAdmin) {
+  Widget _buildWelcomeCard() {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -169,11 +168,11 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             radius: 30,
             backgroundColor: Colors.white,
             child: Icon(
-              isAdmin ? Icons.admin_panel_settings : Icons.person,
+              Icons.person,
               size: 32,
               color: Colors.deepPurple,
             ),
@@ -188,9 +187,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  isAdmin ? "Administrator" : "Kasir",
-                  style: const TextStyle(
+                const Text(
+                  "Petugas",
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

@@ -8,11 +8,11 @@ class RegisterPage extends StatefulWidget {
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+  class _RegisterPageState extends State<RegisterPage> {
   final nameC = TextEditingController();
   final emailC = TextEditingController();
   final passC = TextEditingController();
-  String role = "cashier";
+  String role = "admin"; // Force admin role for everyone
 
   bool loading = false;
   String? err;
@@ -103,25 +103,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           prefixIcon: Icon(Icons.lock_outline),
                         ),
                         obscureText: true,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: role,
-                        decoration: const InputDecoration(
-                          labelText: "Role",
-                          prefixIcon: Icon(Icons.badge_outlined),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: "cashier",
-                            child: Text("Kasir"),
-                          ),
-                          DropdownMenuItem(
-                            value: "admin",
-                            child: Text("Admin"),
-                          ),
-                        ],
-                        onChanged: (v) => setState(() => role = v ?? "cashier"),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(

@@ -124,13 +124,13 @@ class _ProductListPageState extends State<ProductListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = role == "admin";
+    // Everyone uses "admin" features (edit/delete) AND "cashier" features (cart)
+    const isAdmin = true; 
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Katalog Produk"),
         actions: [
-          if (!isAdmin)
             Stack(
               children: [
                 IconButton(
@@ -174,14 +174,14 @@ class _ProductListPageState extends State<ProductListPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: Colors.deepPurple),
-              accountName: Text(isAdmin ? "Administrator" : "Kasir"),
-              accountEmail: const Text("Snappos System"),
+            const UserAccountsDrawerHeader(
+              decoration: BoxDecoration(color: Colors.deepPurple),
+              accountName: Text("Petugas"),
+              accountEmail: Text("Snappos System"),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(
-                  isAdmin ? Icons.admin_panel_settings : Icons.person,
+                  Icons.person,
                   size: 32,
                   color: Colors.deepPurple,
                 ),
@@ -214,18 +214,17 @@ class _ProductListPageState extends State<ProductListPage> {
                 );
               },
             ),
-            if (isAdmin)
-               ListTile(
-                leading: const Icon(Icons.bar_chart),
-                title: const Text('Laporan Penjualan'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ReportPage()),
-                  );
-                },
-              ),
+             ListTile(
+              leading: const Icon(Icons.bar_chart),
+              title: const Text('Laporan Penjualan'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReportPage()),
+                );
+              },
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
@@ -316,8 +315,7 @@ class _ProductListPageState extends State<ProductListPage> {
                                                 Colors.deepPurple.shade100,
                                           ),
                                         ),
-                                  if (isAdmin)
-                                    Positioned(
+                                    Positioned( // Always show edit/delete
                                       top: 4,
                                       right: 4,
                                       child: Row(
@@ -445,8 +443,7 @@ class _ProductListPageState extends State<ProductListPage> {
                     },
                   ),
                 ),
-      floatingActionButton: isAdmin
-          ? FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
               onPressed: () async {
                 final refresh = await Navigator.push(
                   context,
@@ -456,9 +453,8 @@ class _ProductListPageState extends State<ProductListPage> {
               },
               backgroundColor: Colors.deepPurple,
               child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
-      bottomNavigationBar: (isAdmin || cart.items.isEmpty)
+            ),
+      bottomNavigationBar: (cart.items.isEmpty)
           ? null
           : Container(
               padding: const EdgeInsets.all(16),
